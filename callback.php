@@ -1,44 +1,43 @@
 <?php
 session_start();
 
-$client_id = 'your_client_id.apps.googleusercontent.com';
-$client_secret = 'your_client_secret';
+// 從 credentials.json 讀取 client_id 和 client_secret
+$credentials = json_decode(file_get_contents(__DIR__ . '/credentials.json'), true)['web'];
+$client_id = $credentials['client_id'];
+$client_secret = $credentials['client_secret'];
+
 $redirect_uri = 'http://localhost:3000/callback.php';
 $token_url = 'https://oauth2.googleapis.com/token';
 
 if (isset($_GET['code'])) {
-    // 授权码可以从回调请求中获取
+    // 從回調請求中獲取授權碼
     $code = $_GET['code'];
 
-    // 使用授权码获取access token
+    // 使用授權碼獲取access token
     $token = getToken($code, $client_id, $client_secret, $redirect_uri, $token_url);
 
-    // 将token存储为JSON
+    // 將token存儲為JSON格式
     $token_data = array(
         'access_token' => $token->access_token,
         'expires_in' => $token->expires_in, // Token的有效期（秒）
-        'created' => time() // 当前时间戳
+        'created' => time() // 當前時間戳
     );
 
     if (isset($token->refresh_token)) {
         $token_data['refresh_token'] = $token->refresh_token;
     }
 
-    // 将Token数据转换为JSON格式
+    // 將Token數據轉換為JSON格式
     $json_token = json_encode($token_data);
 
-    // 定义存储JSON的文件路径（确保这个路径是安全的且PHP有写入权限）
+    // 定義存儲JSON的文件路徑（確保這個路徑是安全的且PHP有寫入權限）
     $file_path = 'token.json';
 
-    // 将JSON数据写入文件
+    // 將JSON數據寫入文件
     file_put_contents($file_path, $json_token);
-
-    // 可选：重定向到应用的另一个页面或显示成功消息
-    // header('Location: success_page.php');
-    // exit;
 } else {
-    // 如果没有code参数，显示错误或重定向到初始登录页面
-    echo 'Authorization code not received.';
+    // 如果沒有code參數，顯示錯誤或重定向到初始登錄頁面
+    echo '未接收到授權碼。';
 }
 
 function getToken($code, $client_id, $client_secret, $redirect_uri, $token_url) {
@@ -60,7 +59,7 @@ function getToken($code, $client_id, $client_secret, $redirect_uri, $token_url) 
     if (isset($response_data->access_token)) {
         return $response_data;
     } else {
-        die('Error retrieving token: ' . $response);
+        die('獲取Token時發生錯誤：' . $response);
     }
 }
 ?>
